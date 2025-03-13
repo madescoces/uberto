@@ -1,0 +1,58 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-uberto
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=uberto
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=patoniato
+    networks:
+      ubertonet:
+        ipv4_address: 192.168.3.3
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  uberto:
+    container_name: backend-uberto
+    build: .
+    ports:
+      - "8081:8080"
+    networks:
+      ubertonet:
+        ipv4_address: 192.168.3.2
+    depends_on:
+      - postgres
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin-uberto
+    restart: unless-stopped
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=patoniato
+    networks:
+      ubertonet:
+        ipv4_address: 192.168.3.200
+    ports:
+      - "8889:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+
+volumes:
+  postgres-data:
+    driver: local
+  pgadmin-data:
+    driver: local
+
+networks:
+  ubertonet:
+    name: ubertonet
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.3.0/24
